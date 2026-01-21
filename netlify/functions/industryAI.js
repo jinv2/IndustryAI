@@ -1,13 +1,14 @@
-// netlify/functions/industryAI.js
-const OpenAI = require("openai");
+import OpenAI from "openai";
 
-exports.handler = async function (event, context) {
+export async function handler(event) {
   try {
-    const { industry, prompt } = JSON.parse(event.body || "{}");
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("请在 Netlify 配置 OPENAI_API_KEY");
+    if (!event.body) throw new Error("请求体为空");
+    const { industry, prompt } = JSON.parse(event.body);
 
-    const client = new OpenAI({ apiKey });
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (!openaiKey) throw new Error("请在 Netlify 配置 OPENAI_API_KEY");
+
+    const openai = new OpenAI({ apiKey: openaiKey });
 
     let systemMsg = "";
     if (industry === "音乐") {
@@ -16,9 +17,11 @@ exports.handler = async function (event, context) {
     } else if (industry === "影视") {
       systemMsg =
         "你是影视剪辑与导演AI，能根据用户输入生成剪辑建议、分镜或剧情优化方案。";
+    } else {
+      systemMsg = "你是一个专业AI助手，根据用户输入提供专业建议。";
     }
 
-    const response = await client.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: "gpt-5-mini",
       messages: [
         { role: "system", content: systemMsg },
@@ -27,11 +30,9 @@ exports.handler = async function (event, context) {
       temperature: 0.2,
     });
 
-    const output = response.choices[0].message.content;
-
     return {
       statusCode: 200,
-      body: JSON.stringify({ output }),
+      body: JSON.stringify({ output: response.choices[0].message.content }),
     };
   } catch (err) {
     return {
@@ -39,4 +40,4 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({ error: err.message }),
     };
   }
-};
+}
