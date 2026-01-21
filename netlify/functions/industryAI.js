@@ -3,13 +3,16 @@ import OpenAI from "openai";
 export async function handler(event) {
   try {
     if (!event.body) throw new Error("请求体为空");
+
     const { industry, prompt } = JSON.parse(event.body);
 
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (!openaiKey) throw new Error("请在 Netlify 配置 OPENAI_API_KEY");
+    // ⚠️ 客户必须在 Netlify 配置 DEEPSEEK_API_KEY
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) throw new Error("请在 Netlify 配置 DEEPSEEK_API_KEY");
 
-    const openai = new OpenAI({ apiKey: openaiKey });
+    const openai = new OpenAI({ apiKey });
 
+    // 根据行业设置系统提示
     let systemMsg = "";
     if (industry === "音乐") {
       systemMsg =
@@ -17,10 +20,9 @@ export async function handler(event) {
     } else if (industry === "影视") {
       systemMsg =
         "你是影视剪辑与导演AI，能根据用户输入生成剪辑建议、分镜或剧情优化方案。";
-    } else {
-      systemMsg = "你是一个专业AI助手，根据用户输入提供专业建议。";
     }
 
+    // 调用 OpenAI 接口
     const response = await openai.chat.completions.create({
       model: "gpt-5-mini",
       messages: [
