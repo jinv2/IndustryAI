@@ -4,7 +4,11 @@ export async function handler(event) {
   try {
     const { industry, prompt } = JSON.parse(event.body);
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // ⚠️ 这里必须由客户自己在 Netlify 环境变量配置 OPENAI_API_KEY
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (!openaiKey) throw new Error("请在 Netlify 配置 OPENAI_API_KEY");
+
+    const openai = new OpenAI({ apiKey: openaiKey });
 
     let systemMsg = "";
     if (industry === "音乐") {
